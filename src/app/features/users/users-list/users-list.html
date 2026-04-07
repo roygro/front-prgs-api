@@ -1,0 +1,145 @@
+<div class="min-h-screen bg-gradient-to-br from-green-950 to-emerald-800">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    
+    <!-- Header con efecto glass -->
+    <div class="backdrop-blur-md bg-white/10 rounded-2xl p-6 mb-8 border border-white/20">
+      <div class="flex flex-col sm:flex-row justify-between items-center gap-4">
+        <div class="flex items-center gap-3">
+          <div class="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center text-2xl backdrop-blur">
+            👥
+          </div>
+          <div>
+            <h1 class="text-2xl font-bold text-white">Administrar Usuarios</h1>
+            <p class="text-white/70 text-sm">Gestiona los usuarios del sistema</p>
+          </div>
+        </div>
+        <div class="text-white/60 text-sm">
+          {{ filteredUsers.length }} usuario{{ filteredUsers.length !== 1 ? 's' : '' }}
+        </div>
+      </div>
+    </div>
+
+    <!-- Buscador -->
+    <div class="backdrop-blur-md bg-white/10 rounded-2xl p-4 mb-8 border border-white/20">
+      <div class="relative">
+        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+          <span class="text-white/50">🔍</span>
+        </div>
+        <input 
+          type="text" 
+          class="w-full pl-10 pr-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-white/30 focus:border-transparent transition"
+          placeholder="Buscar por nombre, apellido o username..."
+          [(ngModel)]="searchTerm"
+        >
+      </div>
+    </div>
+
+    <!-- Loading -->
+    <div *ngIf="loading" class="flex justify-center items-center py-32">
+      <div class="relative">
+        <div class="animate-spin rounded-full h-16 w-16 border-4 border-white/20 border-t-white"></div>
+        <div class="absolute inset-0 flex items-center justify-center">
+          <span class="text-white/60 text-sm">Cargando...</span>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Sin usuarios -->
+    <div *ngIf="!loading && filteredUsers.length === 0" 
+         class="backdrop-blur-md bg-white/10 rounded-2xl p-16 text-center border border-white/20">
+      <div class="text-7xl mb-4 opacity-50">👥</div>
+      <h3 class="text-xl font-semibold text-white mb-2">No hay usuarios registrados</h3>
+      <p class="text-white/60 mb-6">Los usuarios aparecerán aquí cuando se registren</p>
+    </div>
+    
+    <!-- Tabla de usuarios con estilo glass -->
+    <div *ngIf="!loading && filteredUsers.length > 0" class="backdrop-blur-md bg-white/10 rounded-2xl border border-white/20 overflow-hidden">
+      <div class="overflow-x-auto">
+        <table class="w-full">
+          <thead>
+            <tr class="border-b border-white/20 bg-white/5">
+              <th class="px-6 py-4 text-left text-white font-semibold text-sm">ID</th>
+              <th class="px-6 py-4 text-left text-white font-semibold text-sm">Nombre</th>
+              <th class="px-6 py-4 text-left text-white font-semibold text-sm">Apellido</th>
+              <th class="px-6 py-4 text-left text-white font-semibold text-sm">Username</th>
+              <th class="px-6 py-4 text-left text-white font-semibold text-sm">Fecha Registro</th>
+              <th class="px-6 py-4 text-center text-white font-semibold text-sm">Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let user of filteredUsers" 
+                class="border-b border-white/10 hover:bg-white/5 transition duration-200">
+              <td class="px-6 py-4 text-white/80 text-sm">#{{ user.id }}</td>
+              <td class="px-6 py-4 text-white font-medium">{{ user.name }}</td>
+              <td class="px-6 py-4 text-white/80">{{ user.lastname }}</td>
+              <td class="px-6 py-4 text-white/80">@{{ user.username }}</td>
+              <td class="px-6 py-4 text-white/60 text-sm">{{ user.created_at | date:'dd/MM/yyyy' }}</td>
+              <td class="px-6 py-4 text-center">
+                <button (click)="confirmDelete(user)" 
+                        class="px-4 py-2 rounded-lg text-sm transition-all duration-200 flex items-center gap-1 mx-auto bg-red-500/20 text-red-300 hover:bg-red-500 hover:text-white border border-red-500/30">
+                  🗑️ Eliminar
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal de confirmación -->
+<div *ngIf="showDeleteModal" class="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 animate-fadeIn" (click)="closeModal()">
+  <div class="bg-white rounded-2xl p-6 w-full max-w-md mx-4 transform transition-all duration-300 animate-slideUp" (click)="$event.stopPropagation()">
+    
+    <div class="flex justify-between items-center mb-5">
+      <div class="flex items-center gap-2">
+        <div class="w-10 h-10 bg-red-100 rounded-xl flex items-center justify-center text-xl">
+          ⚠️
+        </div>
+        <h2 class="text-xl font-bold text-gray-800">Confirmar Eliminación</h2>
+      </div>
+      <button (click)="closeModal()" class="w-8 h-8 rounded-full bg-gray-100 text-gray-500 hover:bg-gray-200 transition flex items-center justify-center">
+        ✕
+      </button>
+    </div>
+    
+    <div class="mb-6">
+      <p class="text-gray-600 text-center">
+        ¿Estás seguro de eliminar a <strong class="text-red-600">{{ selectedUser?.name }} {{ selectedUser?.lastname }}</strong>?
+      </p>
+      <p class="text-gray-400 text-sm text-center mt-2">Esta acción no se puede deshacer.</p>
+    </div>
+    
+    <div class="flex gap-3">
+      <button (click)="closeModal()" 
+              class="flex-1 px-4 py-2.5 border border-gray-200 rounded-xl text-gray-600 hover:bg-gray-50 transition font-medium">
+        Cancelar
+      </button>
+      <button (click)="deleteUser()" 
+              class="flex-1 px-4 py-2.5 rounded-xl text-white transition font-medium shadow-md hover:shadow-lg bg-red-600 hover:bg-red-700">
+        Eliminar
+      </button>
+    </div>
+  </div>
+</div>
+
+<style>
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  
+  @keyframes slideUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  
+  .animate-fadeIn {
+    animation: fadeIn 0.2s ease-out;
+  }
+  
+  .animate-slideUp {
+    animation: slideUp 0.3s ease-out;
+  }
+</style>
